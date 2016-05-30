@@ -20,13 +20,13 @@ function addMotionSensor(sensor){
 
 
 //sending a message to change the RGB LED colour
-function updateRGBLED(colour){
+function updateLED(state){
     console.log("Sending RGB LED update");
 
     var payload = {
         Event:'update',
-        Type:'rgbled',
-        att:{rgbValue: colour}
+        Type:'led',
+        att:{value: state}
     };
 
     socket.send(JSON.stringify(payload));
@@ -38,7 +38,7 @@ function recieveUpdate(sensor){
 	if ('value' in sensor['att']) {
 
 		if (!sensor['att']['value']) {
-			updateRGBLED("0,0,255"); // // Turn LED blue
+			updateLED(false); // // Turn LED off
 			findObjectsById('motion_sensor_red_button').forEach(function(item) {
 			        item.traverse(function (object) {
 			            //object.setRGB(0,77,0);
@@ -47,7 +47,7 @@ function recieveUpdate(sensor){
 			});
 		}
 		else {
-			updateRGBLED("255,0,0"); // Turn LED red
+			updateLED(true); // Turn LED on
 			findObjectsById('motion_sensor_red_button').forEach(function(item) {
 			        item.traverse(function (object) {
 			            //object.setRGB(0,77,0);

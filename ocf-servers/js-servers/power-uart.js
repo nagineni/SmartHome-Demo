@@ -34,11 +34,11 @@ var BLE_DEV_NAME = 'Zephyr DC Power Meter',
 var secure_mode = process.env.SECURE;
 if (secure_mode === '1' || secure_mode === 'true') {
     // We need to create the appropriate ACLs so security will work
-    require("./config-tool/json2cbor")([{
+    require('./config-tool/json2cbor')([{
         href: resourceInterfaceName,
-        rel: "",
+        rel: '',
         rt: [resourceTypeName],
-       "if": ["oic.if.baseline"]
+        'if': ['oic.if.baseline']
     }]);
 }
 
@@ -201,11 +201,11 @@ function readJsonFromUart() {
 
     var start = false; end = false;
 
-    var json = "", last = "", count = 0;
+    var json = '', last = '', count = 0;
 
     while (uart.dataAvailable(0)) {
         var ch = uart.readStr(1);
-        count++
+        count++;
         if (ch == '{')
             start = true;
         else if (ch == '}' && start == true)
@@ -221,11 +221,11 @@ function readJsonFromUart() {
         }
         /* In some cases the reading wont stop, make it stop. */
         if (count >= 4096) {
-          debuglog("UART read error.");
-          break;
+            debuglog('UART read error.');
+            break;
         }
     }
-    debuglog("read: %d bytes", count);
+    debuglog('read: %d bytes', count);
     return last;
 }
 
@@ -250,8 +250,8 @@ function getProperties() {
     try {
         obj = JSON.parse(data);
     }
-    catch(e) {
-        debuglog("Invalid data: ", e.message);
+    catch (e) {
+        debuglog('Invalid data: ', e.message);
     }
 
     // Format the properties.
@@ -301,7 +301,7 @@ function retrieveHandler(request) {
     powerResource.properties = getProperties();
     request.respond(powerResource).catch(handleError);
 
-    if ("observe" in request) {
+    if ('observe' in request) {
         hasUpdate = true;
         observerCount += request.observe ? 1 : -1;
         if (!notifyObserversTimeoutId && observerCount > 0)
@@ -312,8 +312,8 @@ function retrieveHandler(request) {
 
 device.device = Object.assign(device.device, {
     name: 'Smart Home Energy Consumption',
-    coreSpecVersion: "1.0.0",
-    dataModels: [ "v1.1.0-20160519" ]
+    coreSpecVersion: 'core.1.1.0',
+    dataModels: ['res.1.1.0']
 });
 
 function handleError(error) {
@@ -327,38 +327,32 @@ device.platform = Object.assign(device.platform, {
     firmwareVersion: '0.0.1'
 });
 
-// Enable presence
-device.server.enablePresence().then(
-    function() {
+if (device.device.uuid) {
+    // Setup uart
+    setupHardware();
 
-        // Setup uart
-        setupHardware();
+    debuglog('Create Power resource.');
 
-        debuglog('Create Power resource.');
+    // Register Power resource
+    device.server.register({
+        resourcePath: resourceInterfaceName,
+        resourceTypes: [resourceTypeName],
+        interfaces: ['oic.if.baseline'],
+        discoverable: true,
+        observable: true,
+        properties: getProperties()
+    }).then(
+        function(resource) {
+            debuglog('register() resource successful');
+            powerResource = resource;
 
-        // Register Power resource
-        device.server.register({
-            resourcePath: resourceInterfaceName,
-            resourceTypes: [ resourceTypeName ],
-            interfaces: [ 'oic.if.baseline' ],
-            discoverable: true,
-            observable: true,
-            properties: getProperties()
-        }).then(
-            function(resource) {
-                debuglog('register() resource successful');
-                powerResource = resource;
-
-                // Add event handlers for each supported request type
-                resource.onretrieve(retrieveHandler);
-            },
-            function(error) {
-                debuglog('register() resource failed with: ', error);
-            });
-    },
-    function(error) {
-        debuglog('device.enablePresence() failed with: ', error);
-    });
+            // Add event handlers for each supported request type
+            resource.onretrieve(retrieveHandler);
+        },
+        function(error) {
+            debuglog('register() resource failed with: ', error);
+        });
+}
 
 // Cleanup on SIGINT
 process.on('SIGINT', function() {
@@ -383,15 +377,6 @@ process.on('SIGINT', function() {
         },
         function(error) {
             debuglog('unregister() resource failed with: ', error);
-        });
-
-    // Disable presence
-    device.server.disablePresence().then(
-        function() {
-            debuglog('device.disablePresence() successful');
-        },
-        function(error) {
-            debuglog('device.disablePresence() failed with: ', error);
         });
 
     // Exit

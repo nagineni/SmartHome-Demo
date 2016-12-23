@@ -29,11 +29,11 @@ var debuglog = require('util').debuglog('temperature'),
 var secure_mode = process.env.SECURE;
 if (secure_mode === '1' || secure_mode === 'true') {
     // We need to create the appropriate ACLs so security will work
-    require("./config-tool/json2cbor")([{
+    require('./config-tool/json2cbor')([{
         href: resourceInterfaceName,
-        rel: "",
+        rel: '',
         rt: [resourceTypeName],
-       "if": ["oic.if.baseline"]
+        'if': ['oic.if.baseline']
     }]);
 }
 
@@ -41,9 +41,9 @@ var device = require('iotivity-node');
 
 // Units for the temperature.
 var units = {
-    C: "C",
-    F: "F",
-    K: "K",
+    C: 'C',
+    F: 'F',
+    K: 'K',
 };
 
 // Require the MRAA library.
@@ -58,7 +58,7 @@ catch (e) {
 // Setup Temperature sensor pin.
 function setupHardware() {
     if (mraa) {
-       sensorPin = new mraa.Aio(1);
+        sensorPin = new mraa.Aio(1);
     }
 }
 
@@ -69,14 +69,14 @@ function getRange(tempUnit) {
 
     switch (tempUnit) {
         case units.F:
-            range = "-40,257";
+            range = '-40,257';
             break;
         case units.K:
-            range = "233.15,398.15";
+            range = '233.15,398.15';
             break;
         case units.C:
         default:
-            range = "-40,125"
+            range = '-40,125';
             break;
     }
 
@@ -97,16 +97,16 @@ function getProperties(tempUnit) {
         switch (tempUnit) {
             case units.F:
                 temperature = Math.round(((Ktemperature - 273.15) * 9.0 / 5.0 + 32.0) * 100) / 100;
-                debuglog("Temperature in Fahrenheit: ", temperature);
+                debuglog('Temperature in Fahrenheit: ', temperature);
                 break;
             case units.K:
                 temperature = Math.round(Ktemperature * 100) / 100;
-                debuglog("Temperature in Kelvin: ", temperature);
+                debuglog('Temperature in Kelvin: ', temperature);
                 break;
             case units.C:
             default:
                 temperature = Math.round((Ktemperature - 273.15) * 100) / 100;
-                debuglog("Temperature in Celsius: ", temperature);
+                debuglog('Temperature in Celsius: ', temperature);
                 break;
         }
 
@@ -116,7 +116,7 @@ function getProperties(tempUnit) {
         // Simulate real sensor behavior. This is useful
         // for testing on desktop without mraa.
         temperature = temperature + 0.1;
-        debuglog("Temperature: ", temperature);
+        debuglog('Temperature: ', temperature);
         hasUpdate = true;
     }
 
@@ -185,7 +185,7 @@ function retrieveHandler(request) {
     temperatureResource.properties = getProperties(units.C);
     request.respond(temperatureResource).catch(handleError);
 
-    if ("observe" in request) {
+    if ('observe' in request) {
         observerCount += request.observe ? 1 : -1;
         if (observerCount > 0)
             setTimeout(notifyObservers, 200);
@@ -197,7 +197,7 @@ function updateHandler(request) {
 
     if (!ret) {
         // Format the error properties.
-        var err = new Error("Invalid input");
+        var err = new Error('Invalid input');
         request.respondWithError(err);
         return;
     }
@@ -216,7 +216,7 @@ function translateHandler(request) {
             var error = {
                 id: 'temperature',
                 units: request.units,
-                error: request.units + " is an invalid temperature unit."
+                error: request.units + ' is an invalid temperature unit.'
             };
 
             return error;
@@ -232,8 +232,8 @@ function translateHandler(request) {
 
 device.device = Object.assign(device.device, {
     name: 'Smart Home Temperature Sensor',
-    coreSpecVersion: "1.0.0",
-    dataModels: [ "v1.1.0-20160519" ]
+    coreSpecVersion: 'core.1.1.0',
+    dataModels: ['res.1.1.0']
 });
 
 function handleError(error) {
@@ -247,40 +247,34 @@ device.platform = Object.assign(device.platform, {
     firmwareVersion: '0.0.1'
 });
 
-// Enable presence
-device.server.enablePresence().then(
-    function() {
+if (device.device.uuid) {
+    // Setup Temperature sensor pin.
+    setupHardware();
 
-        // Setup Temperature sensor pin.
-        setupHardware();
+    debuglog('Create Temperature resource.');
 
-        debuglog('Create Temperature resource.');
+    // Register Temperature resource
+    device.server.register({
+        resourcePath: resourceInterfaceName,
+        resourceTypes: [resourceTypeName],
+        interfaces: ['oic.if.baseline'],
+        discoverable: true,
+        observable: true,
+        properties: getProperties(units.C)
+    }).then(
+        function(resource) {
+            debuglog('register() resource successful');
+            temperatureResource = resource;
 
-        // Register Temperature resource
-        device.server.register({
-            resourcePath: resourceInterfaceName,
-            resourceTypes: [ resourceTypeName ],
-            interfaces: [ 'oic.if.baseline' ],
-            discoverable: true,
-            observable: true,
-            properties: getProperties(units.C)
-        }).then(
-            function(resource) {
-                debuglog('register() resource successful');
-                temperatureResource = resource;
-
-                // Add event handlers for each supported request type
-                resource.onretrieve(retrieveHandler);
-                resource.onupdate(updateHandler);
-                resource.ontranslate(translateHandler);
-            },
-            function(error) {
-                debuglog('register() resource failed with: ', error);
-            });
-    },
-    function(error) {
-        debuglog('device.enablePresence() failed with: ', error);
-    });
+            // Add event handlers for each supported request type
+            resource.onretrieve(retrieveHandler);
+            resource.onupdate(updateHandler);
+            resource.ontranslate(translateHandler);
+        },
+        function(error) {
+            debuglog('register() resource failed with: ', error);
+        });
+}
 
 // Cleanup on SIGINT
 process.on('SIGINT', function() {
@@ -296,15 +290,6 @@ process.on('SIGINT', function() {
         },
         function(error) {
             debuglog('unregister() resource failed with: ', error);
-        });
-
-    // Disable presence
-    device.server.disablePresence().then(
-        function() {
-            debuglog('device.disablePresence() successful');
-        },
-        function(error) {
-            debuglog('device.disablePresence() failed with: ', error);
         });
 
     // Exit

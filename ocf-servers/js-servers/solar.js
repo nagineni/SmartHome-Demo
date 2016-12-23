@@ -30,11 +30,11 @@ var debuglog = require('util').debuglog('solar'),
 var secure_mode = process.env.SECURE;
 if (secure_mode === '1' || secure_mode === 'true') {
     // We need to create the appropriate ACLs so security will work
-    require("./config-tool/json2cbor")([{
+    require('./config-tool/json2cbor')([{
         href: resourceInterfaceName,
-        rel: "",
+        rel: '',
         rt: [resourceTypeName],
-       "if": ["oic.if.baseline"]
+        'if': ['oic.if.baseline']
     }]);
 }
 
@@ -131,12 +131,12 @@ function startSimulation(properties) {
     solarProperties.tiltPercentage = solarProperties.tiltPercentage + updatePos;
 
     // Update LCD's first row with time and location.
-    solarProperties.lcd1.setTime(solarProperties.lcd1.getTime() + 4*60*1000);
+    solarProperties.lcd1.setTime(solarProperties.lcd1.getTime() + 4 * 60 * 1000);
     var demoTime = solarProperties.lcd1.toTimeString().split(' ')[0];
-    var locationInfo = demoTime + " " + solarProperties.locationInfo;
+    var locationInfo = demoTime + ' ' + solarProperties.locationInfo;
 
     // Update LCD's second row with tilt percentage.
-    var percentage = Math.round(solarProperties.tiltPercentage).toFixed(1) + "%  ";
+    var percentage = Math.round(solarProperties.tiltPercentage).toFixed(1) + '%  ';
 
     updateSolarPanel(solarProperties.tiltPercentage, locationInfo, percentage);
     if (!noObservers)
@@ -171,7 +171,7 @@ function updateProperties(properties) {
         if (locationInfo && typeof locationInfo === 'string')
             solarProperties.locationInfo = locationInfo;
         else
-            solarProperties.locationInfo = "Europe/Helsinki"
+            solarProperties.locationInfo = 'Europe/Helsinki';
 
         startSimulation();
     } else {
@@ -226,7 +226,7 @@ function retrieveHandler(request) {
     solarResource.properties = getProperties();
     request.respond(solarResource).catch(handleError);
 
-    if ("observe" in request) {
+    if ('observe' in request) {
         observerCount += request.observe ? 1 : -1;
         if (observerCount > 0) {
             processObserve();
@@ -246,8 +246,8 @@ function updateHandler(request) {
 
 device.device = Object.assign(device.device, {
     name: 'Smart Home Solar',
-    coreSpecVersion: "1.0.0",
-    dataModels: [ "v1.1.0-20160519" ]
+    coreSpecVersion: 'core.1.1.0',
+    dataModels: ['res.1.1.0']
 });
 
 function handleError(error) {
@@ -261,38 +261,33 @@ device.platform = Object.assign(device.platform, {
     firmwareVersion: '0.0.1'
 });
 
-// Enable presence
-device.server.enablePresence().then(
-    function() {
-        // Setup Solar sensor.
-        setupHardware();
+if (device.device.uuid) {
+    // Setup Solar sensor.
+    setupHardware();
 
-        debuglog('Create Solar resource.');
+    debuglog('Create Solar resource.');
 
-        // Register Solar resource
-        device.server.register({
-            resourcePath: resourceInterfaceName,
-            resourceTypes: [ resourceTypeName ],
-            interfaces: [ 'oic.if.baseline' ],
-            discoverable: true,
-            observable: true,
-            properties: getProperties()
-        }).then(
-            function(resource) {
-                debuglog('register() resource successful');
-                solarResource = resource;
+    // Register Solar resource
+    device.server.register({
+        resourcePath: resourceInterfaceName,
+        resourceTypes: [resourceTypeName],
+        interfaces: ['oic.if.baseline'],
+        discoverable: true,
+        observable: true,
+        properties: getProperties()
+    }).then(
+        function(resource) {
+            debuglog('register() resource successful');
+            solarResource = resource;
 
-                // Add event handlers for each supported request type
-                resource.onretrieve(retrieveHandler);
-                resource.onupdate(updateHandler);
-            },
-            function(error) {
-                debuglog('register() resource failed with: ', error);
-            });
-    },
-    function(error) {
-        debuglog('device.enablePresence() failed with: ', error);
-    });
+            // Add event handlers for each supported request type
+            resource.onretrieve(retrieveHandler);
+            resource.onupdate(updateHandler);
+        },
+        function(error) {
+            debuglog('register() resource failed with: ', error);
+        });
+}
 
 // Cleanup on SIGINT
 process.on('SIGINT', function() {
@@ -315,15 +310,6 @@ process.on('SIGINT', function() {
         },
         function(error) {
             debuglog('unregister() resource failed with: ', error);
-        });
-
-    // Disable presence
-    device.server.disablePresence().then(
-        function() {
-            debuglog('device.disablePresence() successful');
-        },
-        function(error) {
-            debuglog('device.disablePresence() failed with: ', error);
         });
 
     // Exit

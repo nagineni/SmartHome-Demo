@@ -25,11 +25,11 @@ var debuglog = require('util').debuglog('fan'),
 var secure_mode = process.env.SECURE;
 if (secure_mode === '1' || secure_mode === 'true') {
     // We need to create the appropriate ACLs so security will work
-    require("./config-tool/json2cbor")([{
+    require('./config-tool/json2cbor')([{
         href: resourceInterfaceName,
-        rel: "",
+        rel: '',
         rt: [resourceTypeName],
-       "if": ["oic.if.baseline"]
+        'if': ['oic.if.baseline']
     }]);
 }
 
@@ -84,7 +84,7 @@ function getProperties() {
 }
 
 // Set up the notification loop
-function notifyObservers(request) {
+function notifyObservers() {
     fanResource.properties = getProperties();
 
     fanResource.notify().catch(
@@ -98,7 +98,7 @@ function retrieveHandler(request) {
     fanResource.properties = getProperties();
     request.respond(fanResource).catch(handleError);
 
-    if ("observe" in request) {
+    if ('observe' in request) {
         observerCount += request.observe ? 1 : -1;
         if (observerCount > 0)
             setTimeout(notifyObservers, 200);
@@ -116,8 +116,8 @@ function updateHandler(request) {
 
 device.device = Object.assign(device.device, {
     name: 'Smart Home Fan',
-    coreSpecVersion: "1.0.0",
-    dataModels: [ "v1.1.0-20160519" ]
+    coreSpecVersion: 'core.1.1.0',
+    dataModels: ['res.1.1.0']
 });
 
 function handleError(error) {
@@ -131,40 +131,33 @@ device.platform = Object.assign(device.platform, {
     firmwareVersion: '0.0.1'
 });
 
-// Enable presence
-device.server.enablePresence().then(
-    function() {
-        debuglog('enablePresence() successful');
+if (device.device.uuid) {
+    // Setup Fan sensor pin.
+    setupHardware();
 
-        // Setup Fan sensor pin.
-        setupHardware();
+    debuglog('Create Fan resource.');
 
-        debuglog('Create Fan resource.');
+    // Register Fan resource
+    device.server.register({
+        resourcePath: resourceInterfaceName,
+        resourceTypes: [resourceTypeName],
+        interfaces: ['oic.if.baseline'],
+        discoverable: true,
+        observable: true,
+        properties: getProperties()
+    }).then(
+        function(resource) {
+            debuglog('register() resource successful');
+            fanResource = resource;
 
-        // Register Fan resource
-        device.server.register({
-            resourcePath: resourceInterfaceName,
-            resourceTypes: [ resourceTypeName ],
-            interfaces: [ 'oic.if.baseline' ],
-            discoverable: true,
-            observable: true,
-            properties: getProperties()
-        }).then(
-            function(resource) {
-                debuglog('register() resource successful');
-                fanResource = resource;
-
-                // Add event handlers for each supported request type
-                resource.onretrieve(retrieveHandler);
-                resource.onupdate(updateHandler);
-            },
-            function(error) {
-                debuglog('register() resource failed with: ', error);
-            });
-    },
-    function(error) {
-        debuglog('device.enablePresence() failed with: ', error);
-    });
+            // Add event handlers for each supported request type
+            resource.onretrieve(retrieveHandler);
+            resource.onupdate(updateHandler);
+        },
+        function(error) {
+            debuglog('register() resource failed with: ', error);
+        });
+}
 
 // Cleanup on SIGINT
 process.on('SIGINT', function() {
@@ -184,14 +177,6 @@ process.on('SIGINT', function() {
         },
         function(error) {
             debuglog('unregister() resource failed with: ', error);
-        });
-
-    device.server.disablePresence().then(
-        function() {
-            debuglog('device.disablePresence() successful');
-        },
-        function(error) {
-            debuglog('device.disablePresence() failed with: ', error);
         });
 
     // Exit

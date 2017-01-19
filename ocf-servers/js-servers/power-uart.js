@@ -334,8 +334,8 @@ device.enablePresence().then(
         debuglog('device.enablePresence() failed with: ', error);
     });
 
-// Cleanup on SIGINT
-process.on('SIGINT', function() {
+// Cleanup when interrupted
+function exitHandler() {
     debuglog('Disconnect any existing BLE connection');
     if (blePeripheral) {
         blePeripheral.disconnect(function(err) {
@@ -371,4 +371,8 @@ process.on('SIGINT', function() {
 
     // Exit
     process.exit(0);
-});
+}
+
+// Exit gracefully
+process.on('SIGINT', exitHandler);
+process.on('SIGTERM', exitHandler);

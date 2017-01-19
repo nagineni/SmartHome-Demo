@@ -218,8 +218,8 @@ device.enablePresence().then(
         debuglog('device.enablePresence() failed with: ', error);
     });
 
-// Cleanup on SIGINT
-process.on('SIGINT', function() {
+// Cleanup when interrupted
+function exitHandler() {
     debuglog('Delete RGB LED Resource.');
 
     // Turn off led before we tear down the resource.
@@ -253,4 +253,8 @@ process.on('SIGINT', function() {
 
     // Exit
     process.exit(0);
-});
+}
+
+// Exit gracefully
+process.on('SIGINT', exitHandler);
+process.on('SIGTERM', exitHandler);

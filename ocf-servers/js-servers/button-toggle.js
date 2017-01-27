@@ -113,7 +113,7 @@ function notifyObservers() {
     // After all our clients are complete, we don't care about any
     // more requests to notify.
     if (observerCount > 0) {
-        notifyObserversTimeoutId = setTimeout(notifyObservers, 200);
+        notifyObserversTimeoutId = setTimeout(notifyObservers, 2000);
     }
 }
 

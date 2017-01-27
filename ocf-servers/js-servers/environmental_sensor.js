@@ -293,7 +293,7 @@ if (device.device.uuid) {
 }
 
 // Cleanup on SIGINT
-process.on('SIGINT', function() {
+function exitHandler() {
 	debuglog('Delete environmental sensor resource.');
 
     if (exitId)
@@ -311,4 +311,8 @@ process.on('SIGINT', function() {
 
 	// Exit
     exitId = setTimeout(function() { process.exit(0); }, 1000);
-});
+}
+
+// Exit gracefully
+process.on('SIGINT', exitHandler);
+process.on('SIGTERM', exitHandler);

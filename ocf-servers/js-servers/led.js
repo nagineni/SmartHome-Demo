@@ -150,8 +150,8 @@ if (device.device.uuid) {
         });
 }
 
-// Cleanup on SIGINT
-process.on('SIGINT', function() {
+// Cleanup when interrupted
+function exitHandler() {
     debuglog('Delete LED Resource.');
 
     if (exitId)
@@ -172,4 +172,8 @@ process.on('SIGINT', function() {
 
     // Exit
     exitId = setTimeout(function() { process.exit(0); }, 1000);
-});
+}
+
+// Exit gracefully
+process.on('SIGINT', exitHandler);
+process.on('SIGTERM', exitHandler);

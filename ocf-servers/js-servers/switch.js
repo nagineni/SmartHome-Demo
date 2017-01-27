@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var debuglog = require('util').debuglog('switch'),
+var device = require('iotivity-node'),
+    debuglog = require('util').debuglog('switch'),
     switchResource,
     sensorPin,
     notifyObserversTimeoutId,
@@ -23,20 +24,6 @@ var debuglog = require('util').debuglog('switch'),
     hasUpdate = false,
     noObservers = false,
     sensorState = false;
-
-// Environment variable to enable secure mode.
-var secure_mode = process.env.SECURE;
-if (secure_mode === '1' || secure_mode === 'true') {
-    // We need to create the appropriate ACLs so security will work
-    require('./config-tool/json2cbor')([{
-        href: resourceInterfaceName,
-        rel: '',
-        rt: [resourceTypeName],
-        'if': ['oic.if.baseline']
-    }]);
-}
-
-var device = require('iotivity-node');
 
 // Require the MRAA library
 var mraa = '';

@@ -17,7 +17,9 @@
 // pressing the button will toggle the value between
 // 'true' and 'false' (instead of being 'true' when
 // the button is pressed and 'false' otherwise.
-var debuglog = require('util').debuglog('button-toggle'),
+
+var device = require('iotivity-node'),
+    debuglog = require('util').debuglog('button-toggle'),
     buttonResource,
     sensorPin,
     notifyObserversTimeoutId,
@@ -28,20 +30,6 @@ var debuglog = require('util').debuglog('button-toggle'),
     hasUpdate = false,
     sensorState = false,
     prevState = false;
-
-// Environment variable to enable secure mode.
-var secure_mode = process.env.SECURE;
-if (secure_mode === '1' || secure_mode === 'true') {
-    // We need to create the appropriate ACLs so security will work
-    require('./config-tool/json2cbor')([{
-        href: resourceInterfaceName,
-        rel: '',
-        rt: [resourceTypeName],
-        'if': ['oic.if.baseline']
-    }]);
-}
-
-var device = require('iotivity-node');
 
 // Require the MRAA library
 var mraa = '';

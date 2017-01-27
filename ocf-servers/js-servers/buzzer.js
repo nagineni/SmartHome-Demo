@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var debuglog = require('util').debuglog('buzzer'),
+var device = require('iotivity-node'),
+    debuglog = require('util').debuglog('buzzer'),
     buzzerResource,
     playNote = false,
     timerId = 0,
@@ -22,20 +23,6 @@ var debuglog = require('util').debuglog('buzzer'),
     sensorState = false,
     resourceTypeName = 'oic.r.buzzer',
     resourceInterfaceName = '/a/buzzer';
-
-// Environment variable to enable secure mode.
-var secure_mode = process.env.SECURE;
-if (secure_mode === '1' || secure_mode === 'true') {
-    // We need to create the appropriate ACLs so security will work
-    require('./config-tool/json2cbor')([{
-        href: resourceInterfaceName,
-        rel: '',
-        rt: [resourceTypeName],
-        'if': ['oic.if.baseline']
-    }]);
-}
-
-var device = require('iotivity-node');
 
 // Require the MRAA library
 var mraa = '';

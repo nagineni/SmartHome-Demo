@@ -1,4 +1,4 @@
-// Copyright 2016 Intel Corporation
+// Copyright 2017 Intel Corporation
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var debuglog = require('util').debuglog('temperature'),
+var device = require('iotivity-node'),
+    debuglog = require('util').debuglog('temperature'),
     temperatureResource,
     sensorPin,
     beta = 3975, // Value of the thermistor
@@ -24,20 +25,6 @@ var debuglog = require('util').debuglog('temperature'),
     hasUpdate = false,
     temperature = 0,
     desiredTemperature = {};
-
-// Environment variable to enable secure mode.
-var secure_mode = process.env.SECURE;
-if (secure_mode === '1' || secure_mode === 'true') {
-    // We need to create the appropriate ACLs so security will work
-    require('./config-tool/json2cbor')([{
-        href: resourceInterfaceName,
-        rel: '',
-        rt: [resourceTypeName],
-        'if': ['oic.if.baseline']
-    }]);
-}
-
-var device = require('iotivity-node');
 
 // Units for the temperature.
 var units = {

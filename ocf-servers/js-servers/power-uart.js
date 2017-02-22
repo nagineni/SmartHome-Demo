@@ -58,7 +58,7 @@ if (!noble) {
          */
         args = process.argv.slice(2);
         args.forEach(function(entry) {
-            dev = entry;
+            serialDev = entry;
         });
     }
 }
@@ -170,7 +170,7 @@ function setupHardware() {
         });
     }
     else if (mraa) {
-        uart = new mraa.Uart(dev);
+        uart = new mraa.Uart(serialDev);
         uart.setBaudRate(115200);
         uart.setMode(8, 0, 1);
         uart.setFlowcontrol(false, false);

@@ -15,7 +15,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
-    "iot-rest-api-server": "0.4",
+    "iot-rest-api-server": "0.6.0",
     "express": "*",
     "websocket": "*",
     "http": "*"

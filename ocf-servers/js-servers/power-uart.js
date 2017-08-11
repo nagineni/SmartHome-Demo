@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var device = require('iotivity-node'),
-    debuglog = require('util').debuglog('power-uart'),
+var debuglog = require('util').debuglog('power-uart'),
     powerResource,
     uart,
     resourceTypeName = 'oic.r.energy.consumption',
@@ -24,7 +23,8 @@ var device = require('iotivity-node'),
     observerCount = 0,
     power1 = 100,  // For simulation only
     power2 = 1000, // Ditto
-    simulationMode = false;
+    simulationMode = false,
+    secureMode = true;
 
 var BLE_DEV_NAME = 'Zephyr DC Power Meter',
     powerServiceUUID = '9c10c448308244cd853d08266c070be5',
@@ -38,8 +38,23 @@ args.forEach(function(entry) {
     if (entry === "--simulation" || entry === "-s") {
         simulationMode = true;
         debuglog('Running in simulation mode');
-    };
+    } else if (entry === "--no-secure") {
+        secureMode = false;
+    }
 });
+
+// Create appropriate ACLs when security is enabled
+if (secureMode) {
+    debuglog('Running in secure mode');
+    require('./config/json-to-cbor')(__filename, [{
+        href: resourceInterfaceName,
+        rel: '',
+        rt: [resourceTypeName],
+        'if': ['oic.if.baseline']
+    }], true);
+}
+
+var device = require('iotivity-node');
 
 var noble = '';
 if (!simulationMode) {
@@ -376,6 +391,11 @@ function exitHandler() {
 
     if (exitId)
         return;
+
+    if (notifyObserversTimeoutId) {
+        clearTimeout(notifyObserversTimeoutId);
+        notifyObserversTimeoutId = null;
+    }
 
     // Unregister resource.
     powerResource.unregister().then(

@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-var device = require('iotivity-node'),
-    debuglog = require('util').debuglog('switch'),
+var debuglog = require('util').debuglog('switch'),
     switchResource,
     sensorPin,
     notifyObserversTimeoutId,
@@ -24,7 +23,8 @@ var device = require('iotivity-node'),
     hasUpdate = false,
     noObservers = false,
     sensorState = false,
-    simulationMode = false;
+    simulationMode = false,
+    secureMode = true;
 
 // Parse command-line arguments
 var args = process.argv.slice(2);
@@ -32,8 +32,23 @@ args.forEach(function(entry) {
     if (entry === "--simulation" || entry === "-s") {
         simulationMode = true;
         debuglog('Running in simulation mode');
-    };
+    } else if (entry === "--no-secure") {
+        secureMode = false;
+    }
 });
+
+// Create appropriate ACLs when security is enabled
+if (secureMode) {
+    debuglog('Running in secure mode');
+    require('./config/json-to-cbor')(__filename, [{
+        href: resourceInterfaceName,
+        rel: '',
+        rt: [resourceTypeName],
+        'if': ['oic.if.baseline']
+    }], true);
+}
+
+var device = require('iotivity-node');
 
 // Require the MRAA library
 var mraa = '';
@@ -179,6 +194,11 @@ function exitHandler() {
 
     if (exitId)
         return;
+
+    if (notifyObserversTimeoutId) {
+        clearTimeout(notifyObserversTimeoutId);
+        notifyObserversTimeoutId = null;
+    }
 
     // Unregister resource.
     switchResource.unregister().then(

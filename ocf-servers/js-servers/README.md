@@ -52,11 +52,14 @@ $ cd SmartHome-Demo
 Here are the `node.js` dependencies that you need to install next:
 * [IoTivity-node](https://www.npmjs.com/package/iotivity-node): this is in fact automatically pulled in when installing the [IoT REST API Server]
 * [mraa](https://www.npmjs.com/package/mraa): it is technically optional. If no `mraa` module is installed, all OCF servers will be running in simulation mode. This could be useful if you don't have the physical sensors or if your platform is not fully supported by `mraa`.
+* [lodash.mergewith](https://www.npmjs.com/package/lodash.mergewith): This is needed by the 'json-to-cbor' script to create appropriate ACLs when security mode is enabled.
+* [lodash.assignin](https://www.npmjs.com/package/lodash.assignin): This is needed by the 'json-to-cbor' script to create appropriate ACLs when security mode is enabled.
+* [uuid](https://www.npmjs.com/package/uuid): This is needed by the 'json-to-cbor' script to create appropriate ACLs when security mode is enabled.
 
 Example:
 ```
 $ cd /opt/SmartHome-Demo
-$ sudo npm install iotivity-node
+$ sudo npm install iotivity-node lodash.mergewith lodash.assignin uuid
 $ sudo npm install mraa #optional
 ```
 

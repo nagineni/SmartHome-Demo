@@ -295,6 +295,8 @@ device.platform = Object.assign(device.platform, {
 });
 
 if (device.device.uuid) {
+    debuglog("Device id: ", device.device.uuid);
+
     debuglog('Create environmental sensor resource.');
 
     // Register sensor resource

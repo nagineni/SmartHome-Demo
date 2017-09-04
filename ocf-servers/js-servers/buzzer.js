@@ -169,6 +169,8 @@ device.platform = Object.assign(device.platform, {
 
 // Enable presence
 if (device.device.uuid) {
+    debuglog("Device id: ", device.device.uuid);
+
     // Setup Buzzer sensor pin.
     setupHardware();
 

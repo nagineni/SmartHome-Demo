@@ -167,6 +167,8 @@ device.platform = Object.assign(device.platform, {
 });
 
 if (device.device.uuid) {
+    debuglog("Device id: ", device.device.uuid);
+
     // Setup Gas sensor pin.
     setupHardware();
 
